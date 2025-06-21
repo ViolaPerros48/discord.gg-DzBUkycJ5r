@@ -324,8 +324,15 @@ this.getMultiplier = function(roles=[], settings, roleList) {
         }
 
         else if (settings.multipliers.rolePriority == "add") {
-            let summed = foundBoosts.length == 1 ? foundBoosts[0].boost : foundBoosts.map(x => x.boost).reduce((a, b) => a + (b - 1), 1).toFixed(4) 
-            return { roles: foundBoosts, boost: Math.max(0, summed) }
+            let baseMultiplier = 1
+            let totalMultiplier = foundBoosts.reduce((total, boost) => {
+                if (boost.boost >= 1) {
+                    return total + boost.boost - baseMultiplier
+                } else {
+                    return total - (baseMultiplier - boost.boost)
+                }
+            }, baseMultiplier)
+            return { roles: foundBoosts, boost: Number(totalMultiplier.toFixed(4)) }
         }
 
         else return { roles: foundBoosts, boost: Number(foundBoosts[0].boost.toFixed(4)) }
