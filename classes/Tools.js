@@ -162,10 +162,16 @@ class Tools {
                         let combined = roleBoosts.map(x => x.boost).reduce((a, b) => a * b, 1).toFixed(4) 
                         combined = Math.min(+combined, 1000000) // 1 million max
                         obj.role = combined; obj.roleList = roleBoosts; break;
-                    case "add": // add (n-1) from each
-                        let filteredBoosts = roleBoosts.filter(x => x.boost != 1)
-                        let summed = filteredBoosts.length == 1 ? filteredBoosts[0].boost : filteredBoosts.map(x => x.boost).reduce((a, b) => a + (b-1), 1)
-                        obj.role = Number(summed.toFixed(4)); obj.roleList = filteredBoosts; break;
+                    case "add": // add all multipliers together, subtract for negative ones
+                        let baseMultiplier = 1
+                        let totalMultiplier = roleBoosts.reduce((total, boost) => {
+                            if (boost.boost >= 1) {
+                                return total + boost.boost - baseMultiplier // Add positive multipliers (subtract 1 to avoid double counting base)
+                            } else {
+                                return total - (baseMultiplier - boost.boost) // Subtract for negative multipliers
+                            }
+                        }, baseMultiplier)
+                        obj.role = Number(totalMultiplier.toFixed(4)); obj.roleList = roleBoosts; break;
                     default: // largest boost 
                         obj.rolePriority = "largest"
                         foundRoleBoost = roleBoosts.sort((a, b) => b.boost - a.boost)[0]; break;
@@ -177,12 +183,12 @@ class Tools {
                 }
             }   
 
-            if (obj.role <= 0 || obj.channel <= 0) obj.multiplier = 0 // 0 always takes priority
+            if (obj.role == 0 || obj.channel == 0) obj.multiplier = 0 // 0 always takes priority
             else switch (settings.multipliers.channelStacking) {
                 case "largest": obj.multiplier = Math.max(obj.role, obj.channel); break; // pick largest between channel and role
                 case "channel": obj.multiplier = foundChannelBoost ? obj.channel : obj.role; break; // channel always takes priority if it exists
                 case "role": obj.multiplier = foundRoleBoost ? obj.role : obj.channel; break; // role takes priority if it exists
-                case "add": obj.multiplier = Math.max(0, 1 + (obj.role - 1) + (obj.channel - 1)); break; // add (n-1) from each
+                case "add": obj.multiplier = 1 + (obj.role - 1) + (obj.channel - 1); break; // add (n-1) from each
                 default: obj.channelStacking = "multiply"; obj.multiplier = obj.role * obj.channel; break; // just multiply them together
             }
 
