@@ -3,7 +3,7 @@
         "largest": "Role with highest multiplier",
         "smallest": "Role with lowest multiplier",
         "highest": "Highest role",
-        "add": "All multipliers summed, n-1 each",
+        "add": "All multipliers added together, allows negative XP gains",
         "combine": "All multipliers combined"
     },
 
