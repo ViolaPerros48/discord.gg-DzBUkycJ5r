@@ -45,8 +45,9 @@ async run(client, int, tools) {
     let barRepeat = Math.round(levelPercent / (100 / barSize)) // .round() so bar can sometimes display as completely full and completely empty
     let progressBar = `${"▓".repeat(barRepeat)}${"░".repeat(barSize - barRepeat)} (${!maxLevel ? Number(levelPercent.toFixed(2)) + "%" : "MAX"})`
 
-    let estimatedMin = Math.ceil(remaining / (db.settings.gain.min * (multiplier || multiplierData.role)))
-    let estimatedMax = Math.ceil(remaining / (db.settings.gain.max * (multiplier || multiplierData.role)))
+    let effectiveMultiplier = multiplier || multiplierData.role
+    let estimatedMin = effectiveMultiplier > 0 ? Math.ceil(remaining / (db.settings.gain.min * effectiveMultiplier)) : Infinity
+    let estimatedMax = effectiveMultiplier > 0 ? Math.ceil(remaining / (db.settings.gain.max * effectiveMultiplier)) : Infinity
 
     // estimated number of messages to level up
     let estimatedRange = (estimatedMax == estimatedMin) ? `${tools.commafy(estimatedMax)} ${tools.extraS("message", estimatedMax)}` : `${tools.commafy(estimatedMax)}-${tools.commafy(estimatedMin)} messages`
@@ -80,15 +81,15 @@ async run(client, int, tools) {
 
     let multRoles = multiplierData.roleList
     let multiplierInfo = []
-    if ((!hideMult || multiplierData.role == 0) && multRoles.length) {
-        let xpStr = multiplierData.role > 0 ? `${multiplierData.role}x XP` : "Cannot gain XP!"
+    if ((!hideMult || multiplierData.role <= 0) && multRoles.length) {
+        let xpStr = multiplierData.role == 0 ? "Cannot gain XP!" : `${multiplierData.role}x XP`
         let roleMultiplierStr = multRoles.length == 1 ? `${int.guild.id != multRoles[0].id ? `<@&${multRoles[0].id}>` : "Everyone"} - ${xpStr}` : `**${multRoles.length} roles** - ${xpStr}`
         multiplierInfo.push(roleMultiplierStr)
     }
 
     let multChannels = multiplierData.channelList
-    if ((!hideMult || multiplierData.channel == 0) && multChannels.length && multiplierData.role > 0 && (multiplierData.role != 1 || multiplierData.channel != 1)) {
-        let chXPStr = multChannels[0].boost > 0 ? `${multiplierData.channel}x XP` : "Cannot gain XP!"
+    if ((!hideMult || multiplierData.channel <= 0) && multChannels.length && multiplierData.role != 0 && (multiplierData.role != 1 || multiplierData.channel != 1)) {
+        let chXPStr = multiplierData.channel == 0 ? "Cannot gain XP!" : `${multiplierData.channel}x XP`
         let chMultiplierStr = `<#${multChannels[0].id}> - ${chXPStr}` // leaving room for multiple channels, via categories or vcs or something
         multiplierInfo.push(chMultiplierStr)
         if (multRoles.length) multiplierInfo.push(`**Total multiplier: ${multiplier}x XP** (${multiplierModes.channelStacking[multiplierData.channelStacking].toLowerCase()})`)
