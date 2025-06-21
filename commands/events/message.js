@@ -20,15 +20,15 @@ async run(client, message, tools) {
 
     // check role+channel multipliers, exit if 0x
     let multiplierData = tools.getMultiplier(message.member, settings, message.channel)
-    if (multiplierData.multiplier <= 0) return
+    if (multiplierData.multiplier == 0) return
 
     // randomly choose an amount of XP to give
     let oldXP = userData.xp
     let xpRange = [settings.gain.min, settings.gain.max].map(x => Math.round(x * multiplierData.multiplier))
     let xpGained = tools.rng(...xpRange) // number between min and max, inclusive
 
-    if (xpGained > 0) userData.xp += Math.round(xpGained)
-    else return
+    userData.xp += Math.round(xpGained)
+    if (userData.xp < 0) userData.xp = 0 // prevent negative total XP
     
     // set xp cooldown
     if (settings.gain.time > 0) userData.cooldown = Date.now() + (settings.gain.time * 1000)
